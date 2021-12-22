@@ -1,0 +1,23 @@
+
+CentralWidget {
+    background-color: rgba(243, 243, 243, 100);
+    border-radius: 10px;
+}
+
+QLabel {
+    color: rgb(31, 111, 235);
+
+    font-family: 'Segoe UI';
+}
+#cityLabel, #feelsLikeLabel {
+    font-size: 12pt;
+}
+#temperatureLabel {
+    font-size: 25pt;
+}
+#appNameLabel, #appDescriptionLabel, #lastUpdatedLabel {
+    color: rgb(0, 0, 0);
+	
+    font-size: 8pt;
+}
+
