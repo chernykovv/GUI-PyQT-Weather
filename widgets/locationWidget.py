@@ -17,8 +17,8 @@ class LocationWidget(QtWidgets.QWidget):
         layout.setContentsMargins(0, 10, 0, 10)
         layout.setSpacing(0)
 
-        cityLabel = QtWidgets.QLabel(text=CITY, parent=self)
-        cityLabel.setObjectName('cityLabel')
-        cityLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        layout.addWidget(cityLabel)
+        locationLabel = QtWidgets.QLabel(text=f'{CITY}, {COUNTRY}', parent=self)
+        locationLabel.setObjectName('locationLabel')
+        locationLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        layout.addWidget(locationLabel)
 

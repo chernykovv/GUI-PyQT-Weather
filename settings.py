@@ -1,5 +1,6 @@
 
 import os
+import requests
 
 with open(file='.env', mode='r') as file:
     for line in file.readlines():
@@ -8,13 +9,28 @@ with open(file='.env', mode='r') as file:
         os.environ[key] = value
 
 
-#
+# APP
 DEBUG = False
 
 APPLICATIONNAME = 'Weather App'
-APPLICATIONVERSION = '0.1.01 (beta)'
+APPLICATIONVERSION = '0.1.02 (beta)'
 
+# OPENWEATHERMAP
 API_KEY = os.environ['API_KEY']
-LAT, LON = 54.9833, 82.8964
-CITY = 'Novosibirsk'
 
+# LOCATION
+def get_current_location():
+    '''get current location by ip'''
+
+    response = requests.get('https://ipinfo.io/')
+    data = response.json()
+
+    if data:
+        return data
+
+
+location = get_current_location()
+
+CITY = location['city']
+COUNTRY = location['country']
+LAT, LON = map(float, location['loc'].split(','))
