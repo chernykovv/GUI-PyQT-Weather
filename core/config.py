@@ -1,7 +1,13 @@
 
+import json
 import os
-import requests
+from collections.abc import Mapping
 
+import requests
+from requests.exceptions import RequestException
+
+from .location import Location
+from .exceptions import eprint, LocationServerError
 from .utils import resource
 
 
@@ -26,18 +32,4 @@ APPLICATIONVERSION = '0.2.4 (alpha)'
 
 
 # --------        LOCATION        --------
-def get_current_location():
-    '''get current location by ip'''
-
-    response = requests.get('https://ipinfo.io/')
-    data = response.json()
-
-    if data:
-        return data
-
-
-location = get_current_location()
-
-CITY = location['city']
-COUNTRY = location['country']
-LAT, LON = map(float, location['loc'].split(','))
+LOCATION = Location.from_ipinfo()

@@ -1,4 +1,5 @@
 
+import dataclasses
 import json
 import os
 import sys
@@ -6,10 +7,13 @@ from pprint import pprint
 
 import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
+from requests.exceptions import RequestException
 
 from core.config import *
-from core.exception import eprint
+from core.exceptions import eprint, WeatherServerError
+from core.style import load_style
 from core.utils import resource
+from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
 from widgets.todayWeatherWidget import TodayWeatherWidget
 from widgets.locationWidget import LocationWidget
 from widgets.infoWidget import InfoWidget
@@ -26,48 +30,16 @@ except ImportError:
 
 
 class UpdateWeatherThread(QtCore.QThread):
-    updated = QtCore.pyqtSignal(dict, bool)
+    updated = QtCore.pyqtSignal(dict)
 
     def __init__(self):
         super().__init__()
 
     def run(self):
+        weather = Weather.from_openweathermap()
+        data = dataclasses.asdict(weather)
 
-        try:
-            exclude = ','.join(['minutely', 'hourly', 'alerts'])
-            units = 'metric'
-            url = f'https://api.openweathermap.org/data/2.5/onecall?lat={LAT}&lon={LON}&units={units}&exclude={exclude}&appid={API_KEY}'
-
-            response = requests.get(url)
-
-            if response.status_code == 200:
-                flag = True
-                data = response.json()
-
-                filename = os.path.join('.', 'weather.json')
-                with open(resource(filename), 'w') as file:
-                    json.dump(data, file)
-
-            else:
-                flag = False
-
-        except Exception as error:
-            eprint(error)
-
-            filename = os.path.join('.', 'weather.json')
-            if os.path.exists(resource(filename)):
-                with open(resource(filename), 'r') as file:
-                    data = json.load(file)
-            else:
-                data = {}
-
-            flag = False
-
-        finally:
-            if DEBUG:
-                pprint(data)
-
-            self.updated.emit(data, flag)
+        self.updated.emit(data)
 
 
 class CentralWidget(QtWidgets.QFrame):
@@ -85,10 +57,11 @@ class CentralWidget(QtWidgets.QFrame):
         layout.addWidget(TodayWeatherWidget())
         layout.addWidget(InfoWidget())
 
-    def update(self, data: dict, flag: bool):
+    def update(self, data: dict):
+        weather = Weather.from_dict(data)
 
         widget = self.findChild(QtWidgets.QWidget, 'todayWeatherWidget')
-        widget.update(data, flag)
+        widget.update(weather)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -104,17 +77,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(icon)
 
         # styles
-        filepath = os.path.join('.', 'styles', 'app.css')
-        try:
-            with open(resource(filepath), mode='r') as file:
-                style = file.read()
-
-        except FileNotFoundError as error:
-            style = ''
-            eprint(error)
-
-        finally:
-            self.setStyleSheet(style)
+        style = load_style()
+        self.setStyleSheet(style)
 
         # central widget
         self.centralWidget = CentralWidget()
@@ -150,6 +114,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+
+    weather = Weather.from_openweathermap()
 
     mainWindow = MainWindow(
         flags=QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint,

@@ -1,7 +1,12 @@
 
 import os
+import re
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
+from core.style import load_style
+from core.utils import resource
 
 
 class CurrentWeatherFrame(QtWidgets.QFrame):
@@ -36,18 +41,22 @@ class CurrentWeatherFrame(QtWidgets.QFrame):
         # lastUpdatedLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         # layout.addWidget(lastUpdatedLabel)
 
-    def update(self, data: dict, flag: bool):
+    def update(self, data: WeatherDataCurrent, flag: bool):
 
         if flag:
+            # style = [item for item in load_style().split('\n') if item.lstrip(' ').startswith('color: ')]  # FIXME: 
+            # reg = re.compile(r'QLabel? {.*?}')
+            # text = ''.join([item.strip() for item in style.split('\n')])
+            # text = re.findall(r'QLabel? {.*?}', text)[0]
+            # re.findall(r'color:? .*?;', text)[0]
+
             style = 'color: rgb(31, 111, 235)'
         else:
             style = 'color: rgb(160, 160, 160)'
 
         # iconLabel
-        icon = data.get('weather', [{}])[0].get('icon', None)
-
-        if icon is not None:
-            filename = os.path.join('.', 'icons', icon + '@4x.png')
+        if data.icon is not None:
+            filename = os.path.join('.', 'icons', data.icon + '@4x.png')
             pixmap = QtGui.QPixmap(filename)
             pixmap = pixmap.scaled(256, 256, QtCore.Qt.KeepAspectRatio)
 
@@ -56,20 +65,16 @@ class CurrentWeatherFrame(QtWidgets.QFrame):
             iconLabel.setStyleSheet(style)
 
         # temperatureLabel
-        value = data.get('temp', float('nan'))
-
         temperatureLabel = self.findChild(QtWidgets.QLabel, 'temperatureLabel')
         temperatureLabel.setText(
-            f'<strong>{value:.0f}</strong> <span>&#8451;</span>'
+            f'<strong>{data.t:.0f}</strong> <span>&#8451;</span>'
         )
         temperatureLabel.setStyleSheet(style)
 
         # feelsLikeLabel
-        value = data.get('feels_like', float('nan'))
-
         feelsLikeLabel = self.findChild(QtWidgets.QLabel, 'feelsLikeLabel')
         feelsLikeLabel.setText(
-            f'FEELS LIKE: <strong>{value:.0f}</strong> <span>&#8451;</span>'
+            f'FEELS LIKE: <strong>{data.t_feels_like:.0f}</strong> <span>&#8451;</span>'
         )
         feelsLikeLabel.setStyleSheet(style)
 
@@ -84,7 +89,7 @@ class ForecastWeatherFrame(QtWidgets.QFrame):
         #
         self.layout = QtWidgets.QHBoxLayout(self)
 
-        for item in ['morn', 'day', 'eve', 'night']:
+        for item in ('morn', 'day', 'eve', 'night'):
 
             frame = QtWidgets.QFrame(self)
             self.layout.addWidget(frame)
@@ -108,16 +113,16 @@ class ForecastWeatherFrame(QtWidgets.QFrame):
             widget.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             layout.addWidget(widget)
 
-    def update(self, data: dict, flag: bool):
+    def update(self, data: WeatherDataForecast, flag: bool):
 
         if flag:
             style = 'color: rgb(31, 111, 235)'
         else:
             style = 'color: rgb(160, 160, 160)'
 
-        for item in ['morn', 'day', 'eve', 'night']:
-            temp = data.get('temp', {})
-            value = temp.get(item, float('nan'))
+        # 
+        for item in ('morn', 'day', 'eve', 'night', ):
+            value = data.t.get(item, {})
 
             temperatureLabel = self.findChild(QtWidgets.QLabel, f'{item}TemperatureLabel')
             temperatureLabel.setText(
@@ -141,10 +146,10 @@ class TodayWeatherWidget(QtWidgets.QWidget):
         self.layout.addWidget(CurrentWeatherFrame())
         self.layout.addWidget(ForecastWeatherFrame())
 
-    def update(self, data: dict, flag: bool):
+    def update(self, weather: Weather):
 
         widget = self.findChild(QtWidgets.QFrame, 'currentWeatherFrame')
-        widget.update(data.get('current', {}), flag)
+        widget.update(weather.current, weather.flag)
 
         widget = self.findChild(QtWidgets.QFrame, 'forecastWeatherFrame')
-        widget.update(data.get('daily', [{}])[0], flag)
+        widget.update(weather.forecast[0], weather)
