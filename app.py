@@ -45,7 +45,7 @@ class UpdateWeatherThread(QtCore.QThread):
                 data = response.json()
 
                 filename = os.path.join('.', 'weather.json')
-                with open(resource(filename), 'w') as file:s
+                with open(resource(filename), 'w') as file:
                     json.dump(data, file)
 
             else:
