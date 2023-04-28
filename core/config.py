@@ -2,23 +2,30 @@
 import os
 import requests
 
-with open(file='.env', mode='r') as file:
+from .utils import resource
+
+
+DEBUG = False
+UPDATE_TIME = 600_000  # time, in msec
+
+# --------        ENV        --------
+filepath = '.env'
+with open(resource(filepath), mode='r') as file:
     for line in file.readlines():
         key, value = line.split('=')
 
         os.environ[key] = value
 
+API_KEY = os.environ['API_KEY']  # openweathermap API_KEY
 
-# APP
-DEBUG = False
 
+# --------        APP        --------
+ORGANIZATIONNAME = 'Exinker'
 APPLICATIONNAME = 'Weather App'
-APPLICATIONVERSION = '0.1.02 (beta)'
+APPLICATIONVERSION = '0.2.4 (alpha)'
 
-# OPENWEATHERMAP
-API_KEY = os.environ['API_KEY']
 
-# LOCATION
+# --------        LOCATION        --------
 def get_current_location():
     '''get current location by ip'''
 

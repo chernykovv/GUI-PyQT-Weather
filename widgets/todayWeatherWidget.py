@@ -44,16 +44,19 @@ class CurrentWeatherFrame(QtWidgets.QFrame):
             style = 'color: rgb(160, 160, 160)'
 
         # iconLabel
-        filename = os.path.join('.', 'icons', data['weather'][0]['icon'] + '@4x.png')
-        pixmap = QtGui.QPixmap(filename)
-        pixmap = pixmap.scaled(256, 256, QtCore.Qt.KeepAspectRatio)
+        icon = data.get('weather', [{}])[0].get('icon', None)
 
-        iconLabel = self.findChild(QtWidgets.QLabel, 'iconLabel')
-        iconLabel.setPixmap(pixmap)
-        iconLabel.setStyleSheet(style)
+        if icon is not None:
+            filename = os.path.join('.', 'icons', icon + '@4x.png')
+            pixmap = QtGui.QPixmap(filename)
+            pixmap = pixmap.scaled(256, 256, QtCore.Qt.KeepAspectRatio)
+
+            iconLabel = self.findChild(QtWidgets.QLabel, 'iconLabel')
+            iconLabel.setPixmap(pixmap)
+            iconLabel.setStyleSheet(style)
 
         # temperatureLabel
-        value = data['temp']
+        value = data.get('temp', float('nan'))
 
         temperatureLabel = self.findChild(QtWidgets.QLabel, 'temperatureLabel')
         temperatureLabel.setText(
@@ -62,7 +65,7 @@ class CurrentWeatherFrame(QtWidgets.QFrame):
         temperatureLabel.setStyleSheet(style)
 
         # feelsLikeLabel
-        value = data['feels_like']
+        value = data.get('feels_like', float('nan'))
 
         feelsLikeLabel = self.findChild(QtWidgets.QLabel, 'feelsLikeLabel')
         feelsLikeLabel.setText(
@@ -113,14 +116,14 @@ class ForecastWeatherFrame(QtWidgets.QFrame):
             style = 'color: rgb(160, 160, 160)'
 
         for item in ['morn', 'day', 'eve', 'night']:
+            temp = data.get('temp', {})
+            value = temp.get(item, float('nan'))
 
-            value = data['temp'][item]
             temperatureLabel = self.findChild(QtWidgets.QLabel, f'{item}TemperatureLabel')
             temperatureLabel.setText(
                 f'<strong>{value:.0f}</strong> <span>&#8451;</span>'
             )
             temperatureLabel.setStyleSheet(style)
-
 
 
 class TodayWeatherWidget(QtWidgets.QWidget):
@@ -141,8 +144,7 @@ class TodayWeatherWidget(QtWidgets.QWidget):
     def update(self, data: dict, flag: bool):
 
         widget = self.findChild(QtWidgets.QFrame, 'currentWeatherFrame')
-        widget.update(data['current'], flag)
+        widget.update(data.get('current', {}), flag)
 
         widget = self.findChild(QtWidgets.QFrame, 'forecastWeatherFrame')
-        widget.update(data['daily'][0], flag)
-
+        widget.update(data.get('daily', [{}])[0], flag)

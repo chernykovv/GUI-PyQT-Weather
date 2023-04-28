@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtWidgets
 
-from settings import *
+from core.config import *
 
 
 class LocationWidget(QtWidgets.QWidget):
@@ -21,4 +21,3 @@ class LocationWidget(QtWidgets.QWidget):
         locationLabel.setObjectName('locationLabel')
         locationLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         layout.addWidget(locationLabel)
-

@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtWidgets
 
-from settings import *
+from core.config import *
 
 
 class InfoWidget(QtWidgets.QWidget):
@@ -26,4 +26,3 @@ class InfoWidget(QtWidgets.QWidget):
         appDescriptionLabel.setObjectName('appDescriptionLabel')
         appDescriptionLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         layout.addWidget(appDescriptionLabel)
-

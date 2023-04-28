@@ -1,28 +1,31 @@
 
 import json
 import os
-from pprint import pprint
 import sys
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-try:  # change app id for correct icon present
-    from PyQt5.QtWinExtras import QtWin
-
-    myAppID = f'mycompany.myproduct.subproduct.version'  # FIXME
-    QtWin.setCurrentProcessExplicitAppUserModelID(myAppID)
-except ImportError:
-    pass
+from pprint import pprint
 
 import requests
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-from settings import *
+from core.config import *
+from core.exception import eprint
+from core.utils import resource
 from widgets.todayWeatherWidget import TodayWeatherWidget
 from widgets.locationWidget import LocationWidget
 from widgets.infoWidget import InfoWidget
 
 
-class UpdateWeatherThread(QtCore.QThread):
+try:  # change app id for correct icon present
+    from PyQt5.QtWinExtras import QtWin
 
+    myAppID = f'{ORGANIZATIONNAME}.{APPLICATIONNAME}.MAINWINDOW.{APPLICATIONVERSION}'
+    QtWin.setCurrentProcessExplicitAppUserModelID(myAppID)
+
+except ImportError:
+    pass
+
+
+class UpdateWeatherThread(QtCore.QThread):
     updated = QtCore.pyqtSignal(dict, bool)
 
     def __init__(self):
@@ -31,37 +34,38 @@ class UpdateWeatherThread(QtCore.QThread):
     def run(self):
 
         try:
-            if DEBUG:
-                raise('')
+            exclude = ','.join(['minutely', 'hourly', 'alerts'])
+            units = 'metric'
+            url = f'https://api.openweathermap.org/data/2.5/onecall?lat={LAT}&lon={LON}&units={units}&exclude={exclude}&appid={API_KEY}'
+
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                flag = True
+                data = response.json()
+
+                filename = os.path.join('.', 'weather.json')
+                with open(resource(filename), 'w') as file:s
+                    json.dump(data, file)
 
             else:
-                exclude = ','.join(['minutely', 'hourly', 'alerts'])
-                units = 'metric'
-                url = f'https://api.openweathermap.org/data/2.5/onecall?lat={LAT}&lon={LON}&units={units}&exclude={exclude}&appid={API_KEY}'
-
-                response = requests.get(url)
-                
-                if response.status_code == 200:
-                    flag = True
-                    data = response.json()
-
-                    filename = os.path.join('.', 'data', 'weather.json')
-                    with open(filename, 'w') as file:
-                        json.dump(data, file)
-
-                else:
-                    flag = False
+                flag = False
 
         except Exception as error:
+            eprint(error)
+
+            filename = os.path.join('.', 'weather.json')
+            if os.path.exists(resource(filename)):
+                with open(resource(filename), 'r') as file:
+                    data = json.load(file)
+            else:
+                data = {}
+
             flag = False
 
         finally:
-            filename = os.path.join('.', 'data', 'weather.json')
-            with open(filename, 'r') as file:
-                data = json.load(file)
-
-                if DEBUG:
-                    pprint(data)
+            if DEBUG:
+                pprint(data)
 
             self.updated.emit(data, flag)
 
@@ -89,8 +93,6 @@ class CentralWidget(QtWidgets.QFrame):
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    update_frequency = 1 / (10 * 60)  # in 1/sec (once in 10 minutes)
-
     def __init__(self, flags):
         super().__init__(flags=flags)
 
@@ -98,31 +100,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
 
         # icon
-        icon = QtGui.QIcon('icon.ico')
+        icon = QtGui.QIcon(resource('icon.ico'))
         self.setWindowIcon(icon)
 
-        # style sheet
-        filepath = os.path.join('.', 'styles', 'mainWindow.css')
-        with open(file=filepath, mode='r') as file:
-            style = file.read()
+        # styles
+        filepath = os.path.join('.', 'styles', 'app.css')
+        try:
+            with open(resource(filepath), mode='r') as file:
+                style = file.read()
 
-        self.setStyleSheet(style)
+        except FileNotFoundError as error:
+            style = ''
+            eprint(error)
+
+        finally:
+            self.setStyleSheet(style)
 
         # central widget
         self.centralWidget = CentralWidget()
         self.setCentralWidget(self.centralWidget)
 
-        # weather thread
+        # update weather thread
         self.updateWeatherThread = UpdateWeatherThread()
         self.updateWeatherThread.updated.connect(self.centralWidget.update)
 
-        # weather timer
+        # update weather timer
         self.updateWeatherTimer = QtCore.QTimer()
-        self.updateWeatherTimer.setInterval(1000/self.update_frequency)  # in msec
+        self.updateWeatherTimer.setInterval(UPDATE_TIME)
         self.updateWeatherTimer.timeout.connect(self.updateWeatherThread.start)
         self.updateWeatherTimer.start()
 
-        QtCore.QTimer.singleShot(300, self.updateWeatherThread.start)  # init weather
+        QtCore.QTimer.singleShot(300, self.updateWeatherThread.start)
 
         #
         self.show()
