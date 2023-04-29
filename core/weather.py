@@ -1,5 +1,6 @@
 
 import json
+import logging
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -18,6 +19,9 @@ class WeatherDataCurrent:
     icon: str | None
     t: float
     t_feels_like: float
+
+    def __str__(self) -> str:
+        return f'{self.icon}, {self.t}, C'
 
 
 @dataclass
@@ -99,22 +103,29 @@ class OpenWeatherMapWeatherService:
 
             flag = False
 
-        finally:
-            current = WeatherDataCurrent(
-                icon=data['current']['weather'][0]['icon'],
-                t=data['current']['temp'],
-                t_feels_like=data['current']['feels_like'],
+        #
+        current = WeatherDataCurrent(
+            icon=data['current']['weather'][0]['icon'],
+            t=data['current']['temp'],
+            t_feels_like=data['current']['feels_like'],
+        )
+        forecast=tuple([
+            WeatherDataForecast(
+                t=_convert_dat(datum['temp']),
+                t_feels_like=_convert_dat(datum['feels_like']),
             )
-            forecast=tuple([
-                WeatherDataForecast(
-                    t=_convert_dat(datum['temp']),
-                    t_feels_like=_convert_dat(datum['feels_like']),
-                )
-                for datum in data['daily']
-            ])
+            for datum in data['daily']
+        ])
 
-            return WeatherData(
-                flag=flag,
-                current=current,
-                forecast=forecast,
-            )
+        #
+        logger = logging.getLogger('app')
+        logger.info('Weather: {}'.format(
+            f'Weather: {current}' if flag else 'Weather: service error!',
+        ))
+
+        #
+        return WeatherData(
+            flag=flag,
+            current=current,
+            forecast=forecast,
+        )

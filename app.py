@@ -1,5 +1,6 @@
 
 import dataclasses
+import logging
 import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -34,7 +35,6 @@ class UpdateWeatherThread(QtCore.QThread):
 
     def run(self):
         data = WEATHER_SERVICE.get()
-
         self.updated.emit(data)
 
 
@@ -105,9 +105,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == '__main__':
+
+    # logger
+    if DEBUG:
+        logger = logging.getLogger('app')
+        logger.debug('app: run.')
+
+    # app
     app = QtWidgets.QApplication(sys.argv)
 
-    mainWindow = MainWindow(
+    window = MainWindow(
         flags=QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint,
     )
 

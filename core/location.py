@@ -1,5 +1,6 @@
 
 import json
+import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -63,6 +64,11 @@ class IpInfoLocationService(LocationService):
         city = data['city']
         lat, lon = map(float, data['loc'].split(','))
 
+        #
+        logger = logging.getLogger('app')
+        logger.info(f'Location: {city}, {country}')
+
+        #
         return LocationData(
             country=country,
             city=city,
