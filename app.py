@@ -1,19 +1,13 @@
 
 import dataclasses
-import json
-import os
 import sys
-from pprint import pprint
 
-import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
-from requests.exceptions import RequestException
 
 from core.config import *
-from core.exceptions import eprint, WeatherServerError
 from core.style import load_style
 from core.utils import resource
-from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
+from core.weather import Weather
 from widgets.todayWeatherWidget import TodayWeatherWidget
 from widgets.locationWidget import LocationWidget
 from widgets.infoWidget import InfoWidget
@@ -47,9 +41,7 @@ class CentralWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
 
-        #
         layout = QtWidgets.QVBoxLayout(self)
-
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
@@ -90,7 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update weather timer
         self.updateWeatherTimer = QtCore.QTimer()
-        self.updateWeatherTimer.setInterval(UPDATE_TIME)
+        self.updateWeatherTimer.setInterval(UPDATE_INTERVAL)
         self.updateWeatherTimer.timeout.connect(self.updateWeatherThread.start)
         self.updateWeatherTimer.start()
 
@@ -114,8 +106,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-
-    weather = Weather.from_openweathermap()
 
     mainWindow = MainWindow(
         flags=QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint,

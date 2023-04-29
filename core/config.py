@@ -1,18 +1,15 @@
 
-import json
 import os
-from collections.abc import Mapping
-
-import requests
-from requests.exceptions import RequestException
 
 from .location import Location
-from .exceptions import eprint, LocationServerError
 from .utils import resource
 
 
 DEBUG = False
-UPDATE_TIME = 600_000  # time, in msec
+
+UPDATE_INTERVAL = 600_000  # time, in msec
+DAY_PARTS = ('morning', 'day', 'evening', 'night', )
+
 
 # --------        ENV        --------
 filepath = '.env'

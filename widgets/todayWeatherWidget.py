@@ -4,9 +4,9 @@ import re
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
+from core.config import DAY_PARTS
 from core.style import load_style
-from core.utils import resource
+from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
 
 
 class CurrentWeatherFrame(QtWidgets.QFrame):
@@ -89,27 +89,19 @@ class ForecastWeatherFrame(QtWidgets.QFrame):
         #
         self.layout = QtWidgets.QHBoxLayout(self)
 
-        for item in ('morn', 'day', 'eve', 'night'):
+        for part in DAY_PARTS:
 
             frame = QtWidgets.QFrame(self)
             self.layout.addWidget(frame)
 
             layout = QtWidgets.QVBoxLayout(frame)
 
-            widget = QtWidgets.QLabel(
-                text={
-                    'morn': 'morning',
-                    'day': 'day',
-                    'eve': 'evening',
-                    'night': 'night',
-                }.get(item),
-                parent=self,
-            )
+            widget = QtWidgets.QLabel(text=f'{part}', parent=self)
             widget.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             layout.addWidget(widget)
 
             widget = QtWidgets.QLabel(text='', parent=self)
-            widget.setObjectName(f'{item}TemperatureLabel')
+            widget.setObjectName(f'{part}TemperatureLabel')
             widget.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             layout.addWidget(widget)
 
@@ -121,10 +113,10 @@ class ForecastWeatherFrame(QtWidgets.QFrame):
             style = 'color: rgb(160, 160, 160)'
 
         # 
-        for item in ('morn', 'day', 'eve', 'night', ):
-            value = data.t.get(item, {})
+        for part in DAY_PARTS:
+            value = data.t.get(part, {})
 
-            temperatureLabel = self.findChild(QtWidgets.QLabel, f'{item}TemperatureLabel')
+            temperatureLabel = self.findChild(QtWidgets.QLabel, f'{part}TemperatureLabel')
             temperatureLabel.setText(
                 f'<strong>{value:.0f}</strong> <span>&#8451;</span>'
             )

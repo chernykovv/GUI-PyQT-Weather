@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import requests
 from requests.exceptions import RequestException
 
-from .config import LOCATION, API_KEY, DEBUG
+from .config import LOCATION, API_KEY, DEBUG, DAY_PARTS
 from .utils import resource
 from .exceptions import eprint, WeatherServerError
 
@@ -45,6 +45,18 @@ class Weather:
 
     @classmethod
     def from_openweathermap(cls) -> 'Weather':
+        MAPPING = {
+            'morning': 'morn',
+            'day': 'day',
+            'evening': 'eve',
+            'night': 'night',
+        }
+
+        def _convert_dat(dat: dict):
+            return {
+                key: dat[MAPPING[key]]
+                for key in DAY_PARTS
+            }
 
         try:
             exclude = ','.join(['minutely', 'hourly', 'alerts'])
@@ -86,8 +98,8 @@ class Weather:
             )
             forecast=tuple([
                 WeatherDataForecast(
-                    t=datum['temp'],
-                    t_feels_like=datum['feels_like'],
+                    t=_convert_dat(datum['temp']),
+                    t_feels_like=_convert_dat(datum['feels_like']),
                 )
                 for datum in data['daily']
             ])
