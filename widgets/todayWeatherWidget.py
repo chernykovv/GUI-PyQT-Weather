@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from core.config import DAY_PARTS
 from core.style import load_style
-from core.weather import Weather, WeatherDataCurrent, WeatherDataForecast
+from core.weather import WeatherData, WeatherDataCurrent, WeatherDataForecast
 
 
 class CurrentWeatherFrame(QtWidgets.QFrame):
@@ -138,10 +138,10 @@ class TodayWeatherWidget(QtWidgets.QWidget):
         self.layout.addWidget(CurrentWeatherFrame())
         self.layout.addWidget(ForecastWeatherFrame())
 
-    def update(self, weather: Weather):
+    def update(self, data: WeatherData):
 
         widget = self.findChild(QtWidgets.QFrame, 'currentWeatherFrame')
-        widget.update(weather.current, weather.flag)
+        widget.update(data.current, data.flag)
 
         widget = self.findChild(QtWidgets.QFrame, 'forecastWeatherFrame')
-        widget.update(weather.forecast[0], weather)
+        widget.update(data.forecast[0], data.flag)

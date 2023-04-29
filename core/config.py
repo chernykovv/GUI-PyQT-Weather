@@ -1,14 +1,11 @@
 
 import os
 
-from .location import Location
+from .location import IpInfoLocationService
 from .utils import resource
 
 
 DEBUG = False
-
-UPDATE_INTERVAL = 600_000  # time, in msec
-DAY_PARTS = ('morning', 'day', 'evening', 'night', )
 
 
 # --------        ENV        --------
@@ -29,4 +26,8 @@ APPLICATIONVERSION = '0.2.4 (alpha)'
 
 
 # --------        LOCATION        --------
-LOCATION = Location.from_ipinfo()
+LOCATION = IpInfoLocationService().get()
+
+# --------        WEATHER        --------
+WEATHER_UPDATE_INTERVAL = 600_000  # time, in msec
+DAY_PARTS = ('morning', 'day', 'evening', 'night', )

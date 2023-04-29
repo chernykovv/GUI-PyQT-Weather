@@ -8,7 +8,7 @@ class WeatherServerError(Exception):
 
 
 class LocationServerError(Exception):
-    '''Location server error'''
+    '''LocationService server error'''
 
 
 def eprint(error: Exception) -> None:

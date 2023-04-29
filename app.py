@@ -7,7 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from core.config import *
 from core.style import load_style
 from core.utils import resource
-from core.weather import Weather
+from core.weather import WeatherData, OpenWeatherMapWeatherService
 from widgets.todayWeatherWidget import TodayWeatherWidget
 from widgets.locationWidget import LocationWidget
 from widgets.infoWidget import InfoWidget
@@ -23,15 +23,17 @@ except ImportError:
     pass
 
 
+WEATHER_SERVICE = OpenWeatherMapWeatherService()
+
+
 class UpdateWeatherThread(QtCore.QThread):
-    updated = QtCore.pyqtSignal(dict)
+    updated = QtCore.pyqtSignal(WeatherData)
 
     def __init__(self):
         super().__init__()
 
     def run(self):
-        weather = Weather.from_openweathermap()
-        data = dataclasses.asdict(weather)
+        data = WEATHER_SERVICE.get()
 
         self.updated.emit(data)
 
@@ -49,11 +51,9 @@ class CentralWidget(QtWidgets.QFrame):
         layout.addWidget(TodayWeatherWidget())
         layout.addWidget(InfoWidget())
 
-    def update(self, data: dict):
-        weather = Weather.from_dict(data)
-
+    def update(self, data: WeatherData):
         widget = self.findChild(QtWidgets.QWidget, 'todayWeatherWidget')
-        widget.update(weather)
+        widget.update(data)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -82,7 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update weather timer
         self.updateWeatherTimer = QtCore.QTimer()
-        self.updateWeatherTimer.setInterval(UPDATE_INTERVAL)
+        self.updateWeatherTimer.setInterval(WEATHER_UPDATE_INTERVAL)
         self.updateWeatherTimer.timeout.connect(self.updateWeatherThread.start)
         self.updateWeatherTimer.start()
 

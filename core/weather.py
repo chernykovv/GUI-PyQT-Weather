@@ -1,6 +1,7 @@
 
 import json
 import os
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -26,35 +27,46 @@ class WeatherDataForecast:
 
 
 @dataclass
-class Weather:
+class WeatherData:
     flag: bool
     current: WeatherDataCurrent
     forecast: tuple[WeatherDataForecast]
 
-    @classmethod
-    def from_dict(cls, data) -> 'Weather':
 
-        return Weather(
+class WeatherService(ABC):
+    '''Interface to get weather data from any service'''
+
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, data: Mapping) -> WeatherData:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self) -> WeatherData:
+        raise NotImplementedError
+
+
+class OpenWeatherMapWeatherService:
+    mapping = {
+        'morning': 'morn',
+        'day': 'day',
+        'evening': 'eve',
+        'night': 'night',
+    }
+
+    @classmethod
+    def from_dict(cls, data: Mapping) -> WeatherData:
+        return WeatherData(
             flag=data['flag'],
             current=WeatherDataCurrent(**data['current']),
-            forecast=tuple(
-                WeatherDataForecast(**datum)
-                for datum in data['forecast']
-            ),
+            forecast=tuple(WeatherDataForecast(**datum) for datum in data['forecast']),
         )
 
-    @classmethod
-    def from_openweathermap(cls) -> 'Weather':
-        MAPPING = {
-            'morning': 'morn',
-            'day': 'day',
-            'evening': 'eve',
-            'night': 'night',
-        }
+    def get(self) -> WeatherData:
 
-        def _convert_dat(dat: dict):
+        def _convert_dat(dat: Mapping):
             return {
-                key: dat[MAPPING[key]]
+                key: dat[self.mapping[key]]
                 for key in DAY_PARTS
             }
 
@@ -68,7 +80,7 @@ class Weather:
                 flag = True
                 data = response.json()
 
-                filename = os.path.join('.', 'weather.json')
+                filename = os.path.join('.', '.weather.json')
                 with open(resource(filename), 'w') as file:
                     json.dump(data, file)
 
@@ -78,7 +90,7 @@ class Weather:
         except (RequestException, WeatherServerError) as error:
             eprint(error)
 
-            filename = os.path.join('.', 'weather.json')
+            filename = os.path.join('.', '.weather.json')
             if os.path.exists(resource(filename)):
                 with open(resource(filename), 'r') as file:
                     data = json.load(file)
@@ -88,9 +100,6 @@ class Weather:
             flag = False
 
         finally:
-            if DEBUG:
-                pprint(data)
-
             current = WeatherDataCurrent(
                 icon=data['current']['weather'][0]['icon'],
                 t=data['current']['temp'],
@@ -104,7 +113,7 @@ class Weather:
                 for datum in data['daily']
             ])
 
-            return cls(
+            return WeatherData(
                 flag=flag,
                 current=current,
                 forecast=forecast,
